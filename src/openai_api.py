@@ -187,7 +187,7 @@ class OpenAI(AIEngine):  # pylint: disable=too-many-instance-attributes
             msg = json.loads(smsg)
             t = msg["type"]
             if t == "response.audio.delta":
-                logging.info("OPENAI_API -> response.audio.delta");
+                logging.info("OPENAI_API -> response.audio.delta")
                 logging.info("OPENAI_API -> resposta delta => " + msg["delta"])
                 media = base64.b64decode(msg["delta"])
                 packets, leftovers = await self.run_in_thread(
@@ -196,7 +196,7 @@ class OpenAI(AIEngine):  # pylint: disable=too-many-instance-attributes
                     logging.info("OPENAI_API -> Enfileirando os dados")
                     self.queue.put_nowait(packet)
             elif t == "response.audio.done":
-                logging.info("OPENAI_API -> response.audio.done");
+                logging.info("OPENAI_API -> response.audio.done")
                 logging.info(t)
                 if len(leftovers) > 0:
                     packet = await self.run_in_thread(
@@ -205,17 +205,17 @@ class OpenAI(AIEngine):  # pylint: disable=too-many-instance-attributes
                     leftovers = b''
 
             elif t == "conversation.item.created":
-                logging.info("OPENAI_API -> conversation.item.created");
+                logging.info("OPENAI_API -> conversation.item.created")
                 if msg["item"].get('status') == "completed":
                     self.drain_queue()
             elif t == "conversation.item.input_audio_transcription.completed":
-                logging.info("OPENAI_API -> conversation.item.input_audio_transcription.completed");
+                logging.info("OPENAI_API -> conversation.item.input_audio_transcription.completed")
                 logging.info(" OPENAI_API ->Speaker: %s", msg["transcript"].rstrip())
             elif t == "response.audio_transcript.done":
-                logging.info("OPENAI_API -> response.audio_transcript.done");
+                logging.info("OPENAI_API -> response.audio_transcript.done")
                 logging.info(" OPENAI_API ->Engine: %s", msg["transcript"])
             elif t == "response.function_call_arguments.done":
-                logging.info("OPENAI_API -> response.function_call_arguments.done");
+                logging.info("OPENAI_API -> response.function_call_arguments.done")
                 if msg["name"] == "terminate_call":
                     logging.info(t)
                     self.terminate_call()
@@ -232,7 +232,7 @@ class OpenAI(AIEngine):  # pylint: disable=too-many-instance-attributes
                     self.call.mi_conn.execute('ua_session_update', params)
 
             elif t == "error":
-                logging.info("OPENAI_API -> error");
+                logging.info("OPENAI_API -> error")
                 logging.info(msg)
             else:
                 logging.info(t)
