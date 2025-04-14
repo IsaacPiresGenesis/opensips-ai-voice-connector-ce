@@ -162,12 +162,14 @@ class OpenAI(AIEngine):  # pylint: disable=too-many-instance-attributes
             self.session["instructions"] = self.instructions
 
         try:
+            logging.info("OPENAI_API -> Enviando session update de início de conversação para OPENAI")
             await self.ws.send(json.dumps({"type": "session.update", "session": self.session}))
             if self.intro:
                 self.intro = {
                     "instructions": "Please greet the user with the following: " +
                     self.intro
                 }
+                logging.info("OPENAI_API -> Entrou no self.intro")
                 await self.ws.send(json.dumps({"type": "response.create", "response": self.intro}))
             await self.handle_command()
         except ConnectionClosedError as e:
@@ -185,10 +187,12 @@ class OpenAI(AIEngine):  # pylint: disable=too-many-instance-attributes
             msg = json.loads(smsg)
             t = msg["type"]
             if t == "response.audio.delta":
+                logging.info("OPENAI_API -> resposta delta => " + msg["delta"])
                 media = base64.b64decode(msg["delta"])
                 packets, leftovers = await self.run_in_thread(
                     self.codec.parse, media, leftovers)
                 for packet in packets:
+                    logging.info("OPENAI_API -> Enfileirando os dados")
                     self.queue.put_nowait(packet)
             elif t == "response.audio.done":
                 logging.info(t)
