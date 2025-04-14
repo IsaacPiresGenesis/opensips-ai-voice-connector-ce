@@ -6,6 +6,12 @@ COPY . /app/
 
 RUN pip install --no-cache-dir -r requirements.txt
 
+RUN apt-get update && \
+    apt-get install -y procps iproute2 net-tools \
+    procps iproute2 net-tools socat && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
 ENV EVENT_PORT=50060
 
 EXPOSE 50060

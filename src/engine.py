@@ -39,7 +39,7 @@ import utils as utils
 
 
 mi_cfg = Config.get("opensips")
-mi_ip = mi_cfg.get("ip", "MI_IP", "127.0.0.1")
+mi_ip = mi_cfg.get("ip", "MI_IP", "0.0.0.0")
 mi_port = int(mi_cfg.get("port", "MI_PORT", "8080"))
 
 mi_conn = OpenSIPSMI(conn="datagram", datagram_ip=mi_ip, datagram_port=mi_port)
@@ -48,7 +48,7 @@ calls = {}
 
 
 def mi_reply(key, method, code, reason, body=None):
-    """ Replies to the server """
+    logging.info(""" ENGINE -> Replies to the server """)
     params = {'key': key,
               'method': method,
               'code': code,
@@ -59,13 +59,13 @@ def mi_reply(key, method, code, reason, body=None):
 
 
 def fetch_bot_config(api_url, bot):
-    """
+    logging.info(""" ENGINE ->
     Sends a POST request to the API to fetch the bot configuration.
 
     :param api_url: URL of the API endpoint.
     :param bot: Name of the bot to fetch configuration for.
     :return: The configuration dictionary if successful, otherwise None.
-    """
+    """)
     try:
         response = requests.post(api_url, json={"bot": bot})
         if response.status_code == 200:
@@ -78,7 +78,7 @@ def fetch_bot_config(api_url, bot):
 
 
 def parse_params(params):
-    """ Parses paraameters received in a call """
+    logging.info(""" ENGINE -> Parses paraameters received in a call """)
     flavor = None
     extra_params = None
     api_url = Config.engine("api_url", "API_URL")
@@ -107,7 +107,7 @@ def parse_params(params):
 
 
 def handle_call(call, key, method, params):
-    """ Handles a SIP call """
+    logging.info(""" ENGINE -> Handles a SIP call """)
 
     if method == 'INVITE':
         if 'body' not in params:
@@ -169,7 +169,7 @@ def handle_call(call, key, method, params):
 
 
 def udp_handler(data):
-    """ UDP handler of events received """
+    logging.info(""" ENGINE -> UDP handler of events received """)
 
     if 'params' not in data:
         return
@@ -195,7 +195,7 @@ def udp_handler(data):
 
 
 async def shutdown(s, loop, event):
-    """ Called when the program is shutting down """
+    logging.info(""" ENGINE -> Called when the program is shutting down """)
     logging.info("Received exit signal %s...", s)
     tasks = [t for t in asyncio.all_tasks() if t is not asyncio.current_task()]
     for task in tasks:
@@ -217,18 +217,21 @@ async def shutdown(s, loop, event):
 
 
 async def async_run():
-    """ Main function """
-    host_ip = Config.engine("event_ip", "EVENT_IP", "127.0.0.1")
-    port = int(Config.engine("event_port", "EVENT_PORT", "0"))
+    logging.info(""" ENGINE -> Main function """)
+    host_ip = Config.engine("event_ip", "EVENT_IP", "0.0.0.0")
+    port = int(Config.engine("event_port", "EVENT_PORT", "50060"))
 
     handler = OpenSIPSEventHandler(mi_conn, "datagram", ip=host_ip, port=port)
     try:
         event = handler.async_subscribe("E_UA_SESSION", udp_handler)
+        logging.info(""" ENGINE -> E_UA_SESSION setado => udp_handler """)
     except OpenSIPSEventException as e:
         logging.error("Error subscribing to event: %s", e)
         return
 
     _, port = event.socket.sock.getsockname()
+
+    logging.info(_)
 
     logging.info("Starting server at %s:%hu", host_ip, port)
 
@@ -241,6 +244,7 @@ async def async_run():
                                              loop,
                                              event)),
     )
+    logging.info(""" ENGINE -> add_signal_handler => signal.SIGTERM """)
 
     loop.add_signal_handler(
         signal.SIGINT,
@@ -248,15 +252,18 @@ async def async_run():
                                              loop,
                                              event)),
     )
+    logging.info(""" ENGINE -> add_signal_handler => signal.SIGINT """)
 
     try:
+        logging.info(""" ENGINE -> await stop """)
         await stop
     except asyncio.CancelledError:
+        logging.info(""" ENGINE -> CancelledError """)
         pass
 
 
 def run():
-    """ Runs the entire engine asynchronously """
+    logging.info(""" ENGINE -> Runs the entire engine asynchronously """)
     asyncio.run(async_run())
 
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4

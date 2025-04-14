@@ -28,21 +28,23 @@ from sipmessage import Address
 from deepgram_api import Deepgram
 from openai_api import OpenAI
 from deepgram_native_api import DeepgramNative
-from azure_api import AzureAI
+#from azure_api import AzureAI
 from config import Config
+import logging
 
 FLAVORS = {"deepgram": Deepgram,
            "openai": OpenAI,
-           "deepgram_native": DeepgramNative,
-           "azure": AzureAI}
+           "deepgram_native": DeepgramNative}
+           #"azure": AzureAI}
 
 
 class UnknownSIPUser(Exception):
-    """ User is not known """
+    logging.info(""" UTILS -> Instanciou a classe """)
+    logging.info(""" UTILS -> User is not known """)
 
 
 def get_header(params, header):
-    """ Returns a specific line from headers """
+    logging.info(""" UTILS -> Returns a specific line from headers """)
     if 'headers' not in params:
         return None
     hdr_lines = [line for line in params['headers'].splitlines()
@@ -53,7 +55,7 @@ def get_header(params, header):
 
 
 def get_to(params):
-    """ Returns the To line parameters """
+    logging.info(""" UTILS -> Returns the To line parameters """)
     to_line = get_header(params, "To")
     if not to_line:
         return None
@@ -61,7 +63,7 @@ def get_to(params):
 
 
 def indialog(params):
-    """ indicates whether the message is an in-dialog one """
+    logging.info(""" UTILS -> indicates whether the message is an in-dialog one """)
     if 'headers' not in params:
         return False
     to = get_to(params)
@@ -74,20 +76,20 @@ def indialog(params):
 
 
 def get_user(params):
-    """ Returns the User from the SIP headers """
+    logging.info(""" UTILS -> Returns the User from the SIP headers """)
 
     to = get_to(params)
     return to.uri.user.lower() if to.uri else None
 
 
 def _dialplan_match(regex, string):
-    """ Checks if a regex matches the string """
+    logging.info(""" UTILS -> Checks if a regex matches the string """)
     pattern = re.compile(regex)
     return pattern.match(string)
 
 
 def get_ai_flavor_default(user):
-    """ Returns the default algorithm for AI choosing """
+    logging.info(""" UTILS -> Returns the default algorithm for AI choosing """)
     # remove disabled engines
     keys = [k for k, _ in FLAVORS.items() if
             not Config.get(k).getboolean("disabled",
@@ -100,10 +102,14 @@ def get_ai_flavor_default(user):
 
 
 def get_ai_flavor(params):
-    """ Returns the AI flavor to be used """
+    logging.info(""" UTILS -> Returns the AI flavor to be used """)
 
     user = get_user(params)
     if not user:
+        logging.info("Parametros para o caso de não ter usuário")
+        logging.info(params)
+        logging.info("user")
+        logging.info(user)
         raise UnknownSIPUser("cannot parse username")
 
     # first, get the sections in order and check if they have a dialplan
@@ -128,7 +134,7 @@ def get_ai_flavor(params):
 
 
 def get_ai(flavor, call, cfg):
-    """ Returns an AI object """
+    logging.info(""" UTILS -> Returns an AI object """)
     return FLAVORS[flavor](call, cfg)
 
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4

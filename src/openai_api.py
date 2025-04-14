@@ -40,7 +40,7 @@ OPENAI_URL_FORMAT = "wss://api.openai.com/v1/realtime?model={}"
 
 class OpenAI(AIEngine):  # pylint: disable=too-many-instance-attributes
 
-    """ Implements WS communication with OpenAI """
+    logging.info(" OPENAI_API -> Implements WS communication with OpenAI ")
 
     def __init__(self, call, cfg):
         self.codec = self.choose_codec(call.sdp)
@@ -71,7 +71,7 @@ class OpenAI(AIEngine):  # pylint: disable=too-many-instance-attributes
             self.codec_name = "g711_alaw"
 
     def choose_codec(self, sdp):
-        """ Returns the preferred codec from a list """
+        logging.info(" OPENAI_API -> Returns the preferred codec from a list ")
         codecs = get_codecs(sdp)
         priority = ["pcma", "pcmu"]
         cmap = {c.name.lower(): c for c in codecs}
@@ -82,11 +82,11 @@ class OpenAI(AIEngine):  # pylint: disable=too-many-instance-attributes
         raise UnsupportedCodec("No supported codec found")
 
     def get_audio_format(self):
-        """ Returns the corresponding audio format """
+        logging.info(" OPENAI_API -> Returns the corresponding audio format ")
         return self.codec_name
 
     async def start(self):
-        """ Starts OpenAI connection and logs messages """
+        logging.info(" OPENAI_API -> Starts OpenAI connection and logs messages ")
         openai_headers = {
                 "Authorization": f"Bearer {self.key}",
                 "OpenAI-Beta": "realtime=v1"
@@ -95,7 +95,7 @@ class OpenAI(AIEngine):  # pylint: disable=too-many-instance-attributes
         try:
             json.loads(await self.ws.recv())
         except ConnectionClosedOK:
-            logging.info("WS Connection with OpenAI is closed")
+            logging.info(" OPENAI_API ->WS Connection with OpenAI is closed")
             return
         except ConnectionClosedError as e:
             logging.error(e)
@@ -179,7 +179,7 @@ class OpenAI(AIEngine):  # pylint: disable=too-many-instance-attributes
 
 
     async def handle_command(self):  # pylint: disable=too-many-branches
-        """ Handles a command from the server """
+        logging.info(" OPENAI_API -> Handles a command from the server ")
         leftovers = b''
         async for smsg in self.ws:
             msg = json.loads(smsg)
@@ -202,9 +202,9 @@ class OpenAI(AIEngine):  # pylint: disable=too-many-instance-attributes
                 if msg["item"].get('status') == "completed":
                     self.drain_queue()
             elif t == "conversation.item.input_audio_transcription.completed":
-                logging.info("Speaker: %s", msg["transcript"].rstrip())
+                logging.info(" OPENAI_API ->Speaker: %s", msg["transcript"].rstrip())
             elif t == "response.audio_transcript.done":
-                logging.info("Engine: %s", msg["transcript"])
+                logging.info(" OPENAI_API ->Engine: %s", msg["transcript"])
             elif t == "response.function_call_arguments.done":
                 if msg["name"] == "terminate_call":
                     logging.info(t)
@@ -227,25 +227,25 @@ class OpenAI(AIEngine):  # pylint: disable=too-many-instance-attributes
                 logging.info(t)
 
     def terminate_call(self):
-        """ Terminates the call """
+        logging.info(" OPENAI_API -> Terminates the call ")
         self.call.terminated = True
 
     async def run_in_thread(self, func, *args):
-        """ Runs a function in a thread """
+        logging.info(" OPENAI_API -> Runs a function in a thread ")
         return await asyncio.to_thread(func, *args)
 
     def drain_queue(self):
-        """ Drains the playback queue """
+        logging.info(" OPENAI_API -> Drains the playback queue ")
         count = 0
         try:
             while self.queue.get_nowait():
                 count += 1
         except Empty:
             if count > 0:
-                logging.info("dropping %d packets", count)
+                logging.info(" OPENAI_API ->dropping %d packets", count)
 
     async def send(self, audio):
-        """ Sends audio to OpenAI """
+        logging.info(" OPENAI_API -> Sends audio to OpenAI ")
         if not self.ws or self.call.terminated:
             return
 

@@ -1,6 +1,6 @@
 deepgram-sdk
 aiortc
 openai
-opensips>=0.1.3
+opensips
 sipmessage
 requests
