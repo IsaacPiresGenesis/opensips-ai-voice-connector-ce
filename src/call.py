@@ -58,7 +58,7 @@ class Call():  # pylint: disable=too-many-instance-attributes
         try:
             hostname = socket.gethostbyname(socket.gethostname())
         except socket.gaierror:  # unknown hostname
-            hostname = "127.0.0.1"
+            hostname = "0.0.0.0"
         rtp_ip = rtp_cfg.get('ip', 'RTP_IP', hostname)
 
         self.b2b_key = b2b_key

@@ -71,7 +71,7 @@ class OpenAI(AIEngine):  # pylint: disable=too-many-instance-attributes
             self.codec_name = "g711_alaw"
 
     def choose_codec(self, sdp):
-        """ Returns the preferred codec from a list """
+        logging.info(""" Returns the preferred codec from a list """)
         codecs = get_codecs(sdp)
         priority = ["pcma", "pcmu"]
         cmap = {c.name.lower(): c for c in codecs}
@@ -82,11 +82,11 @@ class OpenAI(AIEngine):  # pylint: disable=too-many-instance-attributes
         raise UnsupportedCodec("No supported codec found")
 
     def get_audio_format(self):
-        """ Returns the corresponding audio format """
+        logging.info(""" Returns the corresponding audio format """)
         return self.codec_name
 
     async def start(self):
-        """ Starts OpenAI connection and logs messages """
+        logging.info(""" Starts OpenAI connection and logs messages """)
         openai_headers = {
                 "Authorization": f"Bearer {self.key}",
                 "OpenAI-Beta": "realtime=v1"
@@ -179,7 +179,7 @@ class OpenAI(AIEngine):  # pylint: disable=too-many-instance-attributes
 
 
     async def handle_command(self):  # pylint: disable=too-many-branches
-        """ Handles a command from the server """
+        logging.info(""" Handles a command from the server """)
         leftovers = b''
         async for smsg in self.ws:
             msg = json.loads(smsg)
@@ -227,15 +227,15 @@ class OpenAI(AIEngine):  # pylint: disable=too-many-instance-attributes
                 logging.info(t)
 
     def terminate_call(self):
-        """ Terminates the call """
+        logging.info(""" Terminates the call """)
         self.call.terminated = True
 
     async def run_in_thread(self, func, *args):
-        """ Runs a function in a thread """
+        logging.info(""" Runs a function in a thread """)
         return await asyncio.to_thread(func, *args)
 
     def drain_queue(self):
-        """ Drains the playback queue """
+        logging.info(""" Drains the playback queue """)
         count = 0
         try:
             while self.queue.get_nowait():
@@ -245,7 +245,7 @@ class OpenAI(AIEngine):  # pylint: disable=too-many-instance-attributes
                 logging.info("dropping %d packets", count)
 
     async def send(self, audio):
-        """ Sends audio to OpenAI """
+        logging.info(""" Sends audio to OpenAI """)
         if not self.ws or self.call.terminated:
             return
 
