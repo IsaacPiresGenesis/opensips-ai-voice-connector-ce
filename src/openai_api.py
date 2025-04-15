@@ -171,14 +171,16 @@ class OpenAI(AIEngine):  # pylint: disable=too-many-instance-attributes
 
         try:
             logging.info("OPENAI_API -> Enviando session update de início de conversação para OPENAI")
-            await self.ws.send(json.dumps({"type": "session.update", "session": self.session}))
+            self.ws.send(json.dumps({"type": "session.update", "session": self.session}))
             if self.intro:
                 self.intro = {
                     "instructions": "Please greet the user with the following: " +
                     self.intro
                 }
                 logging.info("OPENAI_API -> Entrou no self.intro")
-                await self.ws.send(json.dumps({"type": "response.create", "response": self.intro}))
+                self.ws.send(json.dumps({"type": "response.create", "response": self.intro}))
+            
+            logging.info("OPENAI_API -> enviado")
             #await self.handle_command()
         except ConnectionClosedError as e:
             logging.error(f"Error while communicating with OpenAI: {e}. Terminating call.")
