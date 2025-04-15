@@ -28,7 +28,7 @@ import base64
 import logging
 import asyncio
 from queue import Empty
-import websocket
+import websockets
 from websockets.exceptions import ConnectionClosedOK, ConnectionClosedError
 from ai import AIEngine
 from codec import get_codecs, CODECS, UnsupportedCodec
@@ -92,24 +92,24 @@ class OpenAI(AIEngine):  # pylint: disable=too-many-instance-attributes
                 "OpenAI-Beta": "realtime=v1"
         }
         logging.info(" OPENAI_API -> conectando ao websocket ")
-        #self.ws = await websockets.connect(self.url, additional_headers=openai_headers)
-        self.ws = websocket.WebSocketApp(
-            self.url,
-            header=openai_headers,
-            on_open=logging.info("OPENAI_API -> conectado a openai."),
-            on_message=self.on_message,
-            on_error=self.on_error,
-            on_close=self.on_close
-        )
+        self.ws = await websockets.connect(self.url, additional_headers=openai_headers)
+        # self.ws = websocket.WebSocketApp(
+        #     self.url,
+        #     header=openai_headers,
+        #     on_open=logging.info("OPENAI_API -> conectado a openai."),
+        #     on_message=self.on_message,
+        #     on_error=self.on_error,
+        #     on_close=self.on_close
+        # )
         logging.info(" OPENAI_API -> conectado ")
-        # try:
-        #     json_result = json.loads(await self.ws.recv())
-        # except ConnectionClosedOK:
-        #     logging.info(" OPENAI_API ->WS Connection with OpenAI is closed")
-        #     return
-        # except ConnectionClosedError as e:
-        #     logging.error(e)
-        #     return
+        try:
+            json_result = json.loads(await self.ws.recv())
+        except ConnectionClosedOK:
+            logging.info(" OPENAI_API ->WS Connection with OpenAI is closed")
+            return
+        except ConnectionClosedError as e:
+            logging.error(e)
+            return
 
         self.session = {
             "turn_detection": {
@@ -185,7 +185,7 @@ class OpenAI(AIEngine):  # pylint: disable=too-many-instance-attributes
                 self.ws.send(json.dumps({"type": "response.create", "response": self.intro}))
             
             logging.info("OPENAI_API -> enviado")
-            #await self.handle_command()
+            await self.handle_command()
         except ConnectionClosedError as e:
             logging.error(f"Error while communicating with OpenAI: {e}. Terminating call.")
             self.terminate_call()
@@ -196,58 +196,59 @@ class OpenAI(AIEngine):  # pylint: disable=too-many-instance-attributes
     async def handle_command(self, message):  # pylint: disable=too-many-branches
         logging.info(" OPENAI_API -> Handles a command from the server ")
         leftovers = b''
-        msg = json.loads(message)
-        t = msg["type"]
-        if t == "response.audio.delta":
-            logging.info("OPENAI_API -> response.audio.delta")
-            logging.info("OPENAI_API -> resposta delta => " + msg["delta"])
-            media = base64.b64decode(msg["delta"])
-            packets, leftovers = await self.run_in_thread(
-                self.codec.parse, media, leftovers)
-            for packet in packets:
-                logging.info("OPENAI_API -> Enfileirando os dados")
-                self.queue.put_nowait(packet)
-        elif t == "response.audio.done":
-            logging.info("OPENAI_API -> response.audio.done")
-            logging.info(t)
-            if len(leftovers) > 0:
-                packet = await self.run_in_thread(
-                        self.codec.parse, None, leftovers)
-                self.queue.put_nowait(packet)
-                leftovers = b''
-
-        elif t == "conversation.item.created":
-            logging.info("OPENAI_API -> conversation.item.created")
-            if msg["item"].get('status') == "completed":
-                self.drain_queue()
-        elif t == "conversation.item.input_audio_transcription.completed":
-            logging.info("OPENAI_API -> conversation.item.input_audio_transcription.completed")
-            logging.info(" OPENAI_API ->Speaker: %s", msg["transcript"].rstrip())
-        elif t == "response.audio_transcript.done":
-            logging.info("OPENAI_API -> response.audio_transcript.done")
-            logging.info(" OPENAI_API ->Engine: %s", msg["transcript"])
-        elif t == "response.function_call_arguments.done":
-            logging.info("OPENAI_API -> response.function_call_arguments.done")
-            if msg["name"] == "terminate_call":
+        async for smsg in self.ws:
+            msg = json.loads(smsg)
+            t = msg["type"]
+            if t == "response.audio.delta":
+                logging.info("OPENAI_API -> response.audio.delta")
+                logging.info("OPENAI_API -> resposta delta => " + msg["delta"])
+                media = base64.b64decode(msg["delta"])
+                packets, leftovers = await self.run_in_thread(
+                    self.codec.parse, media, leftovers)
+                for packet in packets:
+                    logging.info("OPENAI_API -> Enfileirando os dados")
+                    self.queue.put_nowait(packet)
+            elif t == "response.audio.done":
+                logging.info("OPENAI_API -> response.audio.done")
                 logging.info(t)
-                self.terminate_call()
-            elif msg["name"] == "transfer_call":
-                params = {
-                    'key': self.call.b2b_key,
-                    'method': "REFER",
-                    'body': "",
-                    'extra_headers': (
-                        f"Refer-To: <{self.transfer_to}>\r\n"
-                        f"Referred-By: {self.transfer_by}\r\n"
-                    )
-                }
-                self.call.mi_conn.execute('ua_session_update', params)
+                if len(leftovers) > 0:
+                    packet = await self.run_in_thread(
+                            self.codec.parse, None, leftovers)
+                    self.queue.put_nowait(packet)
+                    leftovers = b''
 
-        elif t == "error":
-            logging.info("OPENAI_API -> error")
-            logging.info(msg)
-        else:
-            logging.info(t)
+            elif t == "conversation.item.created":
+                logging.info("OPENAI_API -> conversation.item.created")
+                if msg["item"].get('status') == "completed":
+                    self.drain_queue()
+            elif t == "conversation.item.input_audio_transcription.completed":
+                logging.info("OPENAI_API -> conversation.item.input_audio_transcription.completed")
+                logging.info(" OPENAI_API ->Speaker: %s", msg["transcript"].rstrip())
+            elif t == "response.audio_transcript.done":
+                logging.info("OPENAI_API -> response.audio_transcript.done")
+                logging.info(" OPENAI_API ->Engine: %s", msg["transcript"])
+            elif t == "response.function_call_arguments.done":
+                logging.info("OPENAI_API -> response.function_call_arguments.done")
+                if msg["name"] == "terminate_call":
+                    logging.info(t)
+                    self.terminate_call()
+                elif msg["name"] == "transfer_call":
+                    params = {
+                        'key': self.call.b2b_key,
+                        'method': "REFER",
+                        'body': "",
+                        'extra_headers': (
+                            f"Refer-To: <{self.transfer_to}>\r\n"
+                            f"Referred-By: {self.transfer_by}\r\n"
+                        )
+                    }
+                    self.call.mi_conn.execute('ua_session_update', params)
+
+            elif t == "error":
+                logging.info("OPENAI_API -> error")
+                logging.info(msg)
+            else:
+                logging.info(t)
 
     def on_message(self, message):
         logging.info("OPENAI_API -> message received")
