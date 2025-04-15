@@ -96,13 +96,13 @@ class OpenAI(AIEngine):  # pylint: disable=too-many-instance-attributes
         self.ws = websocket.WebSocketApp(
             self.url,
             header=openai_headers,
-            on_open=print("OPENAI_API -> conectado a openai.")
+            on_open=logging.info("OPENAI_API -> conectado a openai.")
         )
         logging.info(" OPENAI_API -> conectado ")
         try:
             logging.info(" OPENAI_API -> tentando buscar o json ")
-            json = json.loads(await self.ws.recv())
-            logging.info(f" OPENAI_API -> buscou o json {json}")
+            json_result = json.loads(await self.ws.recv())
+            logging.info(f" OPENAI_API -> buscou o json {json_result}")
         except ConnectionClosedOK:
             logging.info(" OPENAI_API ->WS Connection with OpenAI is closed")
             return
