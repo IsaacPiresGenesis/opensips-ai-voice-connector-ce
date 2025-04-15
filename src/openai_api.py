@@ -96,19 +96,18 @@ class OpenAI(AIEngine):  # pylint: disable=too-many-instance-attributes
         self.ws = websocket.WebSocketApp(
             self.url,
             header=openai_headers,
-            on_open=logging.info("OPENAI_API -> conectado a openai.")
+            on_open=logging.info("OPENAI_API -> conectado a openai."),
+            on_message=self.on_message
         )
         logging.info(" OPENAI_API -> conectado ")
-        try:
-            logging.info(" OPENAI_API -> tentando buscar o json ")
-            json_result = json.loads(await self.ws.recv())
-            logging.info(f" OPENAI_API -> buscou o json {json_result}")
-        except ConnectionClosedOK:
-            logging.info(" OPENAI_API ->WS Connection with OpenAI is closed")
-            return
-        except ConnectionClosedError as e:
-            logging.error(e)
-            return
+        # try:
+        #     json_result = json.loads(await self.ws.recv())
+        # except ConnectionClosedOK:
+        #     logging.info(" OPENAI_API ->WS Connection with OpenAI is closed")
+        #     return
+        # except ConnectionClosedError as e:
+        #     logging.error(e)
+        #     return
 
         self.session = {
             "turn_detection": {
@@ -180,7 +179,7 @@ class OpenAI(AIEngine):  # pylint: disable=too-many-instance-attributes
                 }
                 logging.info("OPENAI_API -> Entrou no self.intro")
                 await self.ws.send(json.dumps({"type": "response.create", "response": self.intro}))
-            await self.handle_command()
+            #await self.handle_command()
         except ConnectionClosedError as e:
             logging.error(f"Error while communicating with OpenAI: {e}. Terminating call.")
             self.terminate_call()
@@ -188,8 +187,7 @@ class OpenAI(AIEngine):  # pylint: disable=too-many-instance-attributes
             logging.error(f"Unexpected error during session: {e}. Terminating call.")
             self.terminate_call()
 
-
-    async def handle_command(self):  # pylint: disable=too-many-branches
+    async def handle_command(self, message):  # pylint: disable=too-many-branches
         logging.info(" OPENAI_API -> Handles a command from the server ")
         leftovers = b''
         async for smsg in self.ws:
@@ -245,6 +243,9 @@ class OpenAI(AIEngine):  # pylint: disable=too-many-instance-attributes
                 logging.info(msg)
             else:
                 logging.info(t)
+
+    def on_message(self, message):
+        asyncio.run(self.handle_command(message))
 
     def terminate_call(self):
         logging.info(" OPENAI_API -> Terminates the call ")
