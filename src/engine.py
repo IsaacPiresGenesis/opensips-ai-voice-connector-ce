@@ -106,7 +106,7 @@ def parse_params(params):
     return flavor, to, cfg
 
 
-def handle_call(call, key, method, params):
+async def handle_call(call, key, method, params):
     logging.info(""" ENGINE -> Handles a SIP call """)
 
     if method == 'INVITE':
@@ -136,6 +136,7 @@ def handle_call(call, key, method, params):
         try:
             flavor, to, cfg = parse_params(params)
             new_call = Call(key, mi_conn, sdp, flavor, to, cfg)
+            await new_call.start_ia()
             calls[key] = new_call
             mi_reply(key, method, 200, 'OK', new_call.get_body())
         except UnsupportedCodec:
@@ -168,7 +169,7 @@ def handle_call(call, key, method, params):
         return
 
 
-def udp_handler(data):
+async def udp_handler(data):
     logging.info(""" ENGINE -> UDP handler of events received """)
 
     if 'params' not in data:
@@ -195,7 +196,7 @@ def udp_handler(data):
     else:
         call = None
 
-    handle_call(call, key, method, params)
+    await handle_call(call, key, method, params)
 
 
 async def shutdown(s, loop, event):

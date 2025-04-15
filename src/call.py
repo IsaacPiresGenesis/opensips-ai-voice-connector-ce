@@ -90,8 +90,6 @@ class Call():  # pylint: disable=too-many-instance-attributes
 
         self.sdp = self.get_new_sdp(sdp, rtp_ip)
 
-        asyncio.create_task(self.start_tasking())
-
     def bind(self, host_ip):
         logging.info("CALL -> Binds the call to a port ")
         if not available_ports:
@@ -139,7 +137,7 @@ class Call():  # pylint: disable=too-many-instance-attributes
 
         self.paused = True
 
-    def read_rtp(self):
+    async def read_rtp(self):
         logging.info("CALL -> Reads a RTP packet ")
 
         try:
@@ -185,7 +183,7 @@ class Call():  # pylint: disable=too-many-instance-attributes
                 payload = self.rtp.get_nowait()
             except Empty:
                 if self.terminated:
-                    self.terminate()
+                    await self.terminate()
                     return
                 if not self.paused:
                     payload = self.codec.get_silence()
@@ -229,13 +227,13 @@ class Call():  # pylint: disable=too-many-instance-attributes
         self.stop_event.set()
         await self.ai.close()
 
-    def terminate(self):
+    async def terminate(self):
         logging.info("CALL -> Terminates the call ")
         logging.info("Terminating call %s", self.b2b_key)
         self.mi_conn.execute("ua_session_terminate", {"key": self.b2b_key})
         asyncio.create_task(self.close())
 
-    async def start_tasking(self):
+    async def start_ia(self):
         asyncio.create_task(self.ai.start())
 
         self.first_packet = True
