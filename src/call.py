@@ -80,6 +80,8 @@ class Call():  # pylint: disable=too-many-instance-attributes
         self.sdp = sdp
         self.ai = get_ai(flavor, self, cfg)
 
+        logging.info("OpenAi url -> " + self.ai.url)
+
         self.codec = self.ai.get_codec()
 
         self.serversock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -88,12 +90,7 @@ class Call():  # pylint: disable=too-many-instance-attributes
 
         self.sdp = self.get_new_sdp(sdp, rtp_ip)
 
-        asyncio.create_task(self.ai.start())
-
-        self.first_packet = True
-        loop = asyncio.get_running_loop()
-        loop.add_reader(self.serversock.fileno(), self.read_rtp)
-        logging.info("handling %s using %s AI", b2b_key, flavor)
+        asyncio.create_task(self.start_tasking())
 
     def bind(self, host_ip):
         logging.info("CALL -> Binds the call to a port ")
@@ -237,5 +234,13 @@ class Call():  # pylint: disable=too-many-instance-attributes
         logging.info("Terminating call %s", self.b2b_key)
         self.mi_conn.execute("ua_session_terminate", {"key": self.b2b_key})
         asyncio.create_task(self.close())
+
+    async def start_tasking(self):
+        asyncio.create_task(self.ai.start())
+
+        self.first_packet = True
+        loop = asyncio.get_running_loop()
+        loop.add_reader(self.serversock.fileno(), self.read_rtp)
+        logging.info("handling %s using %s AI", self.b2b_key, self.flavor)
 
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
