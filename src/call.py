@@ -79,6 +79,7 @@ class Call():  # pylint: disable=too-many-instance-attributes
         self.to = to
         self.sdp = sdp
         self.ai = get_ai(flavor, self, cfg)
+        self.flavor = flavor
 
         logging.info("OpenAi url -> " + self.ai.url)
 

@@ -169,7 +169,7 @@ async def handle_call(call, key, method, params):
         return
 
 
-async def udp_handler(data):
+def udp_handler(data):
     logging.info(""" ENGINE -> UDP handler of events received """)
 
     if 'params' not in data:
@@ -196,7 +196,7 @@ async def udp_handler(data):
     else:
         call = None
 
-    await handle_call(call, key, method, params)
+    asyncio.run(handle_call(call, key, method, params))
 
 
 async def shutdown(s, loop, event):

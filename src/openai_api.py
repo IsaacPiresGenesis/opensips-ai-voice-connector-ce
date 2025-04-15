@@ -28,7 +28,7 @@ import base64
 import logging
 import asyncio
 from queue import Empty
-from websockets.asyncio.client import connect
+import websockets
 from websockets.exceptions import ConnectionClosedOK, ConnectionClosedError
 from ai import AIEngine
 from codec import get_codecs, CODECS, UnsupportedCodec
@@ -91,9 +91,13 @@ class OpenAI(AIEngine):  # pylint: disable=too-many-instance-attributes
                 "Authorization": f"Bearer {self.key}",
                 "OpenAI-Beta": "realtime=v1"
         }
-        self.ws = await connect(self.url, additional_headers=openai_headers)
+        logging.info(" OPENAI_API -> conectando ao websocket ")
+        self.ws = await websockets.connect(self.url, additional_headers=openai_headers)
+        logging.info(" OPENAI_API -> conectado ")
         try:
-            json.loads(await self.ws.recv())
+            logging.info(" OPENAI_API -> tentando buscar o json ")
+            json = json.loads(await self.ws.recv())
+            logging.info(f" OPENAI_API -> buscou o json {json}")
         except ConnectionClosedOK:
             logging.info(" OPENAI_API ->WS Connection with OpenAI is closed")
             return
