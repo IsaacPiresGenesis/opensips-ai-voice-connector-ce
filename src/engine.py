@@ -172,19 +172,23 @@ def udp_handler(data):
     logging.info(""" ENGINE -> UDP handler of events received """)
 
     if 'params' not in data:
+        logging.info("'params' not in data")
         return
     params = data['params']
 
     if 'key' not in params:
+        logging.info("'key' not in params")
         return
     key = params['key']
 
     if 'method' not in params:
+        logging.info("'method' not in params")
         return
     method = params['method']
     if utils.indialog(params):
         # search for the call
         if key not in calls:
+            logging.info("key not in calls")
             mi_reply(key, method, 481, 'Call/Transaction Does Not Exist')
             return
         call = calls[key]
@@ -217,21 +221,19 @@ async def shutdown(s, loop, event):
 
 
 async def async_run():
-    logging.info(""" ENGINE -> Main function """)
+    logging.info(""" ENGINE -> executando async_run """)
     host_ip = Config.engine("event_ip", "EVENT_IP", "0.0.0.0")
     port = int(Config.engine("event_port", "EVENT_PORT", "50060"))
 
     handler = OpenSIPSEventHandler(mi_conn, "datagram", ip=host_ip, port=port)
     try:
-        event = handler.async_subscribe("E_UA_SESSION", udp_handler)
-        logging.info(""" ENGINE -> E_UA_SESSION setado => udp_handler """)
+        event = handler.subscribe("E_UA_SESSION", udp_handler)
+        logging.info(""" ENGINE -> UDP handler adicionado """)
     except OpenSIPSEventException as e:
         logging.error("Error subscribing to event: %s", e)
         return
 
     _, port = event.socket.sock.getsockname()
-
-    logging.info(_)
 
     logging.info("Starting server at %s:%hu", host_ip, port)
 
