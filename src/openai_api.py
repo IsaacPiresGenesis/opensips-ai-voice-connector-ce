@@ -28,13 +28,13 @@ import base64
 import logging
 import asyncio
 from queue import Empty
-import websockets
+import websocket
 from websockets.exceptions import ConnectionClosedOK, ConnectionClosedError
 from ai import AIEngine
 from codec import get_codecs, CODECS, UnsupportedCodec
 from config import Config
 
-OPENAI_API_MODEL = "gpt-4o-realtime-preview-2024-10-01"
+OPENAI_API_MODEL = "gpt-4o-realtime-preview-2024-12-17"
 OPENAI_URL_FORMAT = "wss://api.openai.com/v1/realtime?model={}"
 
 
@@ -84,7 +84,7 @@ class OpenAI(AIEngine):  # pylint: disable=too-many-instance-attributes
     def get_audio_format(self):
         logging.info(" OPENAI_API -> Returns the corresponding audio format ")
         return self.codec_name
-
+    
     async def start(self):
         logging.info(" OPENAI_API -> Starts OpenAI connection and logs messages ")
         openai_headers = {
@@ -92,7 +92,12 @@ class OpenAI(AIEngine):  # pylint: disable=too-many-instance-attributes
                 "OpenAI-Beta": "realtime=v1"
         }
         logging.info(" OPENAI_API -> conectando ao websocket ")
-        self.ws = await websockets.connect(self.url, additional_headers=openai_headers)
+        #self.ws = await websockets.connect(self.url, additional_headers=openai_headers)
+        self.ws = websocket.WebSocketApp(
+            self.url,
+            header=openai_headers,
+            on_open=print("OPENAI_API -> conectado a openai.")
+        )
         logging.info(" OPENAI_API -> conectado ")
         try:
             logging.info(" OPENAI_API -> tentando buscar o json ")
