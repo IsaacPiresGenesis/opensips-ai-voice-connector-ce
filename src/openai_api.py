@@ -173,7 +173,9 @@ class OpenAI(AIEngine):  # pylint: disable=too-many-instance-attributes
 
         try:
             logging.info("OPENAI_API -> Enviando session update de início de conversação para OPENAI")
-            self.ws.send(json.dumps({"type": "session.update", "session": self.session}))
+            json_to_send = json.dumps({"type": "session.update", "session": self.session})
+            logging.info("json to send => " + json_to_send)
+            self.ws.send(json_to_send)
             if self.intro:
                 self.intro = {
                     "instructions": "Please greet the user with the following: " +
