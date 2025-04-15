@@ -97,7 +97,9 @@ class OpenAI(AIEngine):  # pylint: disable=too-many-instance-attributes
             self.url,
             header=openai_headers,
             on_open=logging.info("OPENAI_API -> conectado a openai."),
-            on_message=self.on_message
+            on_message=self.on_message,
+            on_error=self.on_error,
+            on_close=self.on_close
         )
         logging.info(" OPENAI_API -> conectado ")
         # try:
@@ -248,6 +250,12 @@ class OpenAI(AIEngine):  # pylint: disable=too-many-instance-attributes
     def on_message(self, message):
         logging.info("OPENAI_API -> message received")
         asyncio.run(self.handle_command(message))
+
+    def on_error(self, error):
+        logging.info("Erro:", error)
+
+    def on_close(self, close_status_code, close_msg):
+        logging.info("🔒 Conexão encerrada.", close_status_code, close_msg)
 
     def terminate_call(self):
         logging.info(" OPENAI_API -> Terminates the call ")
