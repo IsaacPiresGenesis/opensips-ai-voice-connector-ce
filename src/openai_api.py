@@ -98,7 +98,7 @@ class OpenAI(AIEngine):  # pylint: disable=too-many-instance-attributes
             "OpenAI-Beta": "realtime=v1"
         }
         logging.info("URL ==> " + self.url)
-        logging.info("HEADERS ==> " + headers)
+        logging.info("HEADERS ==> " + json.loads(headers))
         self.ws = await connect(self.url, additional_headers=headers)
         # self.ws = websocket.WebSocketApp(
         #     self.url,
