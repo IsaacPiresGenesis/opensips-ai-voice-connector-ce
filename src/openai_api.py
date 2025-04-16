@@ -216,6 +216,7 @@ class OpenAI(AIEngine):  # pylint: disable=too-many-instance-attributes
         async for smsg in self.ws:
             logging.info(" OPENAI_API -> loop para checagem de mensagens da OPENAI ")
             msg = json.loads(smsg)
+            logging.info("OPENAI_API -> " + smsg)
             t = msg["type"]
             if t == "response.audio.delta":
                 logging.info("OPENAI_API -> response.audio.delta")
