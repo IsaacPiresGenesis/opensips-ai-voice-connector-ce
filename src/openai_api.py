@@ -100,7 +100,7 @@ class OpenAI(AIEngine):  # pylint: disable=too-many-instance-attributes
         logging.info("URL ==> " + self.url)
         logging.info("HEADERS ==> " + json.dumps(headers))
         coro = connect(self.url, additional_headers=headers)
-        self.ws = asyncio.run(coro)
+        self.ws = self.run_in_thread(coro)
         # self.ws = websocket.WebSocketApp(
         #     self.url,
         #     header=openai_headers,
