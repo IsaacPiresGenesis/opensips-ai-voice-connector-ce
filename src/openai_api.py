@@ -213,8 +213,10 @@ class OpenAI(AIEngine):  # pylint: disable=too-many-instance-attributes
     async def handle_command(self):  # pylint: disable=too-many-branches
         logging.info(" OPENAI_API -> Handles a command from the server ")
         leftovers = b''
-        async for smsg in self.ws:
+        t = ""
+        while t != "response.done":
             logging.info(" OPENAI_API -> loop para checagem de mensagens da OPENAI ")
+            smsg = self.ws.recv()
             msg = json.loads(smsg)
             logging.info("OPENAI_API -> " + smsg)
             t = msg["type"]
