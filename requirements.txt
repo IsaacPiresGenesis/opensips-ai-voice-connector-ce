@@ -4,4 +4,4 @@ openai
 opensips
 sipmessage
 requests
-websocket-client
+websockets
