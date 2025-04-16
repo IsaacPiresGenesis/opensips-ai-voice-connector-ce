@@ -216,7 +216,7 @@ class OpenAI(AIEngine):  # pylint: disable=too-many-instance-attributes
         t = ""
         while t != "response.done":
             logging.info(" OPENAI_API -> loop para checagem de mensagens da OPENAI ")
-            smsg = self.ws.recv()
+            smsg = await self.ws.recv()
             msg = json.loads(smsg)
             logging.info("OPENAI_API -> " + smsg)
             t = msg["type"]
