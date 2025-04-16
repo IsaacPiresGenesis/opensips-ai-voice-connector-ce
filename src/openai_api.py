@@ -192,7 +192,7 @@ class OpenAI(AIEngine):  # pylint: disable=too-many-instance-attributes
             logging.info("OPENAI_API -> Enviando session update de início de conversação para OPENAI")
             json_to_send = json.dumps({"type": "session.update", "session": self.session})
             logging.info("json to send => " + json_to_send)
-            self.ws.send(json_to_send)
+            await self.ws.send(json_to_send)
             if self.intro:
                 self.intro = {
                     "instructions": "Please greet the user with the following: " +
@@ -210,7 +210,7 @@ class OpenAI(AIEngine):  # pylint: disable=too-many-instance-attributes
             logging.error(f"Unexpected error during session: {e}. Terminating call.")
             self.terminate_call()
 
-    async def handle_command(self, message):  # pylint: disable=too-many-branches
+    async def handle_command(self):  # pylint: disable=too-many-branches
         logging.info(" OPENAI_API -> Handles a command from the server ")
         leftovers = b''
         async for smsg in self.ws:
