@@ -271,7 +271,6 @@ class OpenAI(AIEngine):  # pylint: disable=too-many-instance-attributes
                 logging.info(msg)
             else:
                 logging.info(t)
-                break
         
         logging.info(" OPENAI_API -> Passou do loop ")
 
