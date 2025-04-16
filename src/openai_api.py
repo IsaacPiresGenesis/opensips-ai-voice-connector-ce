@@ -89,7 +89,7 @@ class OpenAI(AIEngine):  # pylint: disable=too-many-instance-attributes
         logging.info(" OPENAI_API -> Starts OpenAI connection and logs messages ")
         openai_headers = {
                 "Authorization": f"Bearer {self.key}",
-                "OpenAI-Beta": "realtime=v1"
+                "OpenAI-Beta": "speech-to-speech"
         }
         logging.info(" OPENAI_API -> conectando ao websocket ")
         conn = await connect(self.url, additional_headers=openai_headers)
