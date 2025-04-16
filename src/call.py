@@ -235,7 +235,7 @@ class Call():  # pylint: disable=too-many-instance-attributes
         asyncio.create_task(self.close())
 
     async def start_ia(self):
-        asyncio.create_task(self.ai.start())
+        await self.ai.start()
 
         self.first_packet = True
         loop = asyncio.get_running_loop()

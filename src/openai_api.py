@@ -85,131 +85,131 @@ class OpenAI(AIEngine):  # pylint: disable=too-many-instance-attributes
         logging.info(" OPENAI_API -> Returns the corresponding audio format ")
         return self.codec_name
     
-    async def start(self):
-        headers = {
-            "Authorization": f"Bearer {self.key}",
-            "OpenAI-Beta": "realtime=v1"
-        }
-        print("Tentando conectar")
-        self.ws = await connect(self.url, additional_headers=headers)
-        print("Conexão feita com sucesso")
-
-    
     # async def start(self):
-    #     logging.info(" OPENAI_API -> Starts OpenAI connection and logs messages ")
-    #     openai_headers = {
-    #             "Authorization": f"Bearer {self.key}",
-    #             "OpenAI-Beta": "speech-to-speech"
-    #     }
-    #     logging.info(" OPENAI_API -> conectando ao websocket ")
-        
     #     headers = {
     #         "Authorization": f"Bearer {self.key}",
     #         "OpenAI-Beta": "realtime=v1"
     #     }
-    #     logging.info("URL ==> " + self.url)
-    #     logging.info("HEADERS ==> " + json.dumps(headers))
-    #     coro = connect(self.url, additional_headers=headers)
-    #     self.ws = await self.run_in_thread(coro)
-    #     # self.ws = websocket.WebSocketApp(
-    #     #     self.url,
-    #     #     header=openai_headers,
-    #     #     on_open=logging.info("OPENAI_API -> conectado a openai."),
-    #     #     on_message=self.on_message,
-    #     #     on_error=self.on_error,
-    #     #     on_close=self.on_close
-    #     # )
-    #     logging.info(" OPENAI_API -> conectado ")
-    #     try:
-    #         json_result = json.loads(await self.ws.recv())
-    #     except ConnectionClosedOK:
-    #         logging.info(" OPENAI_API ->WS Connection with OpenAI is closed")
-    #         return
-    #     except ConnectionClosedError as e:
-    #         logging.error(e)
-    #         return
+    #     print("Tentando conectar")
+    #     self.ws = await connect(self.url, additional_headers=headers)
+    #     print("Conexão feita com sucesso")
 
-    #     self.session = {
-    #         "turn_detection": {
-    #             "type": self.cfg.get("turn_detection_type",
-    #                                  "OPENAI_TURN_DETECT_TYPE",
-    #                                  "server_vad"),
-    #             "silence_duration_ms": int(self.cfg.get(
-    #                 "turn_detection_silence_ms",
-    #                 "OPENAI_TURN_DETECT_SILENCE_MS",
-    #                 200)),
-    #             "threshold": float(self.cfg.get(
-    #                 "turn_detection_threshold",
-    #                 "OPENAI_TURN_DETECT_THRESHOLD",
-    #                 0.5)),
-    #             "prefix_padding_ms": int(self.cfg.get(
-    #                 "turn_detection_prefix_ms",
-    #                 "OPENAI_TURN_DETECT_PREFIX_MS",
-    #                 200)),
-    #         },
-    #         "input_audio_format": self.get_audio_format(),
-    #         "output_audio_format": self.get_audio_format(),
-    #         "input_audio_transcription": {
-    #             "model": "whisper-1",
-    #         },
-    #         "voice": self.voice,
-    #         "temperature": float(self.cfg.get("temperature",
-    #                                           "OPENAI_TEMPERATURE", 0.8)),
-    #         "max_response_output_tokens": self.cfg.get("max_tokens",
-    #                                                    "OPENAI_MAX_TOKENS",
-    #                                                    "inf"),
-    #         "tools": [
-    #             {
-    #                 "type": "function",
-    #                 "name": "terminate_call",
-    #                 "description":
-    #                     "Call me when any of the session's parties want "
-    #                     "to terminate the call."
-    #                     "Always say goodbye before hanging up."
-    #                     "Send the audio first, then call this function.",
-    #                 "parameters": {
-    #                     "type": "object",
-    #                     "properties": {},
-    #                     "required": []
-    #                 },
-    #             },
-    #             {
-    #                 "type": "function",
-    #                 "name": "transfer_call",
-    #                 "description": "call the function if a request was received to transfer a call with an operator, a person",
-    #                 "parameters": {
-    #                     "type": "object",
-    #                     "properties": {},
-    #                     "required": []
-    #                 }
-    #             },
-    #         ],
-    #         "tool_choice": "auto",
-    #     }
-    #     if self.instructions:
-    #         self.session["instructions"] = self.instructions
+    
+    async def start(self):
+        logging.info(" OPENAI_API -> Starts OpenAI connection and logs messages ")
+        openai_headers = {
+                "Authorization": f"Bearer {self.key}",
+                "OpenAI-Beta": "speech-to-speech"
+        }
+        logging.info(" OPENAI_API -> conectando ao websocket ")
+        
+        headers = {
+            "Authorization": f"Bearer {self.key}",
+            "OpenAI-Beta": "realtime=v1"
+        }
+        logging.info("URL ==> " + self.url)
+        logging.info("HEADERS ==> " + json.dumps(headers))
+        coro = connect(self.url, additional_headers=headers)
+        self.ws = await self.run_in_thread(coro)
+        # self.ws = websocket.WebSocketApp(
+        #     self.url,
+        #     header=openai_headers,
+        #     on_open=logging.info("OPENAI_API -> conectado a openai."),
+        #     on_message=self.on_message,
+        #     on_error=self.on_error,
+        #     on_close=self.on_close
+        # )
+        logging.info(" OPENAI_API -> conectado ")
+        try:
+            json_result = json.loads(await self.ws.recv())
+        except ConnectionClosedOK:
+            logging.info(" OPENAI_API ->WS Connection with OpenAI is closed")
+            return
+        except ConnectionClosedError as e:
+            logging.error(e)
+            return
 
-    #     try:
-    #         logging.info("OPENAI_API -> Enviando session update de início de conversação para OPENAI")
-    #         json_to_send = json.dumps({"type": "session.update", "session": self.session})
-    #         logging.info("json to send => " + json_to_send)
-    #         self.ws.send(json_to_send)
-    #         if self.intro:
-    #             self.intro = {
-    #                 "instructions": "Please greet the user with the following: " +
-    #                 self.intro
-    #             }
-    #             logging.info("OPENAI_API -> Entrou no self.intro")
-    #             self.ws.send(json.dumps({"type": "response.create", "response": self.intro}))
+        self.session = {
+            "turn_detection": {
+                "type": self.cfg.get("turn_detection_type",
+                                     "OPENAI_TURN_DETECT_TYPE",
+                                     "server_vad"),
+                "silence_duration_ms": int(self.cfg.get(
+                    "turn_detection_silence_ms",
+                    "OPENAI_TURN_DETECT_SILENCE_MS",
+                    200)),
+                "threshold": float(self.cfg.get(
+                    "turn_detection_threshold",
+                    "OPENAI_TURN_DETECT_THRESHOLD",
+                    0.5)),
+                "prefix_padding_ms": int(self.cfg.get(
+                    "turn_detection_prefix_ms",
+                    "OPENAI_TURN_DETECT_PREFIX_MS",
+                    200)),
+            },
+            "input_audio_format": self.get_audio_format(),
+            "output_audio_format": self.get_audio_format(),
+            "input_audio_transcription": {
+                "model": "whisper-1",
+            },
+            "voice": self.voice,
+            "temperature": float(self.cfg.get("temperature",
+                                              "OPENAI_TEMPERATURE", 0.8)),
+            "max_response_output_tokens": self.cfg.get("max_tokens",
+                                                       "OPENAI_MAX_TOKENS",
+                                                       "inf"),
+            "tools": [
+                {
+                    "type": "function",
+                    "name": "terminate_call",
+                    "description":
+                        "Call me when any of the session's parties want "
+                        "to terminate the call."
+                        "Always say goodbye before hanging up."
+                        "Send the audio first, then call this function.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {},
+                        "required": []
+                    },
+                },
+                {
+                    "type": "function",
+                    "name": "transfer_call",
+                    "description": "call the function if a request was received to transfer a call with an operator, a person",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {},
+                        "required": []
+                    }
+                },
+            ],
+            "tool_choice": "auto",
+        }
+        if self.instructions:
+            self.session["instructions"] = self.instructions
+
+        try:
+            logging.info("OPENAI_API -> Enviando session update de início de conversação para OPENAI")
+            json_to_send = json.dumps({"type": "session.update", "session": self.session})
+            logging.info("json to send => " + json_to_send)
+            self.ws.send(json_to_send)
+            if self.intro:
+                self.intro = {
+                    "instructions": "Please greet the user with the following: " +
+                    self.intro
+                }
+                logging.info("OPENAI_API -> Entrou no self.intro")
+                self.ws.send(json.dumps({"type": "response.create", "response": self.intro}))
             
-    #         logging.info("OPENAI_API -> enviado")
-    #         await self.handle_command()
-    #     except ConnectionClosedError as e:
-    #         logging.error(f"Error while communicating with OpenAI: {e}. Terminating call.")
-    #         self.terminate_call()
-    #     except Exception as e:
-    #         logging.error(f"Unexpected error during session: {e}. Terminating call.")
-    #         self.terminate_call()
+            logging.info("OPENAI_API -> enviado")
+            await self.handle_command()
+        except ConnectionClosedError as e:
+            logging.error(f"Error while communicating with OpenAI: {e}. Terminating call.")
+            self.terminate_call()
+        except Exception as e:
+            logging.error(f"Unexpected error during session: {e}. Terminating call.")
+            self.terminate_call()
 
     async def handle_command(self, message):  # pylint: disable=too-many-branches
         logging.info(" OPENAI_API -> Handles a command from the server ")
