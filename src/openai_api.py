@@ -218,7 +218,7 @@ class OpenAI(AIEngine):  # pylint: disable=too-many-instance-attributes
             msg = json.loads(smsg)
             logging.info("OPENAI_API -> " + smsg)
             t = msg["type"]
-            logging.info("OPENAI_API -> " + t)
+            logging.info("OPENAI_API -> T ===== " + t)
             if t == "response.audio.delta":
                 logging.info("OPENAI_API -> response.audio.delta")
                 logging.info("OPENAI_API -> resposta delta => " + msg["delta"])
@@ -269,6 +269,7 @@ class OpenAI(AIEngine):  # pylint: disable=too-many-instance-attributes
                 logging.info(msg)
             else:
                 logging.info(t)
+                break
         
         logging.info(" OPENAI_API -> Passou do loop ")
 
