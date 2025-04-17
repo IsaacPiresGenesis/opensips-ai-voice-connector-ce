@@ -171,7 +171,32 @@ async def handle_call(call, key, method, params):
 
 def udp_handler(data):
     logging.info(""" ENGINE -> UDP handler of events received """)
-    logging.info(data)
+
+    if 'params' not in data:
+        logging.info("'params' not in data")
+        return
+    params = data['params']
+
+    if 'key' not in params:
+        logging.info("'key' not in params")
+        return
+    key = params['key']
+
+    if 'method' not in params:
+        logging.info("'method' not in params")
+        return
+    method = params['method']
+    if utils.indialog(params):
+        # search for the call
+        if key not in calls:
+            logging.info("key not in calls")
+            mi_reply(key, method, 481, 'Call/Transaction Does Not Exist')
+            return
+        call = calls[key]
+    else:
+        call = None
+
+    asyncio.run(handle_call(call, key, method, params))
 
 
 async def shutdown(s, loop, event):
